@@ -10,8 +10,8 @@
     - List of pages concerned
 
 
-## Examples:
-    **compression:**
+# Examples:
+    - compression:
     install GhostScript from https://www.ghostscript.com/download/gsdnld.html
     then run:
     python pdf_manager.py -i input.pdf -o output.pdf\
