@@ -6,7 +6,7 @@ PDF manager:
     - remove pages
     - change pages order
     - compress pdf
-    - add signature to pages
+    - add signature to pages (TODO)
 
 Args:
     - Path to the pdf file
