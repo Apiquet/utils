@@ -19,14 +19,19 @@ Example:
     then run:
     python pdf_manager.py -i input.pdf -o output.pdf\
         -w compress -g path/to/gswin64c.exe
+    optional: -c can be add to set the power compression from 1 to 5
 
     - keep some pages:
     To keep the pages 2, 3 and 4 run:
-    python pdf_manager.py -i input.pdf -o output.pdf -l 2,3,4 -w keep
+    python pdf_manager.py -i input.pdf -o output.pdf -p 2,3,4 -w keep
 
     - remove some pages:
     To remove the pages 2, 3 and 4 run:
-    python pdf_manager.py -i input.pdf -o output.pdf -l 2,3,4 -w remove
+    python pdf_manager.py -i input.pdf -o output.pdf -p 2,3,4 -w remove
+
+    - remove some pages:
+    To change to page order to page 3 then 2 then 1, run:
+    python pdf_manager.py -i input.pdf -o output.pdf -p 2,1,0 -w changeorder
 """
 
 import argparse
@@ -97,6 +102,27 @@ def keep_pages(pdf_file, output_path, list_of_pages):
         output.write(f)
 
 
+def change_order(pdf_file, output_path, new_indexes):
+    '''Change order of pages of pdf file
+
+    Args:
+        - pdf_file       (str): path to the pdf file
+        - output_path    (str): path to the output pdf file
+        - new_indexes    (list of int): list of indexes
+        new_indexes=[2,1,0] to change the pages order to
+        page 3, then 2, then 1
+    '''
+    infile = PdfFileReader(pdf_file, 'rb')
+    output = PdfFileWriter()
+
+    for i in new_indexes:
+        p = infile.getPage(i)
+        output.addPage(p)
+
+    with open(output_path, 'wb') as f:
+        output.write(f)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -130,7 +156,7 @@ def main():
         help="path/to/gswin64c.exe"
     )
     parser.add_argument(
-        "-p",
+        "-c",
         "--power_compression",
         required=False,
         choices=[1, 2, 3, 4, 5],
@@ -139,8 +165,8 @@ def main():
         help="compression power from 1 to 5"
     )
     parser.add_argument(
-        "-l",
-        "--list_of_pages",
+        "-p",
+        "--pages",
         required=False,
         type=str,
         help="List of pages concerned: 1,2,5,11"
@@ -154,13 +180,14 @@ def main():
         compress_pdf(args.input_pdf, args.output_pdf,
                      args.power_compression, args.gs_path)
     elif args.wishto == "remove":
-        list_of_pages = [int(p) for p in args.list_of_pages.split(',')]
-        remove_pages(args.input_pdf, args.output_pdf, list_of_pages)
+        pages = [int(p) for p in args.pages.split(',')]
+        remove_pages(args.input_pdf, args.output_pdf, pages)
     elif args.wishto == "keep":
-        list_of_pages = [int(p) for p in args.list_of_pages.split(',')]
-        keep_pages(args.input_pdf, args.output_pdf, list_of_pages)
+        pages = [int(p) for p in args.pages.split(',')]
+        keep_pages(args.input_pdf, args.output_pdf, pages)
     elif args.wishto == "changeorder":
-        remove_pages()
+        pages = [int(p) for p in args.pages.split(',')]
+        change_order(args.input_pdf, args.output_pdf, pages)
 
 
 if __name__ == '__main__':
