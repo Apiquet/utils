@@ -29,7 +29,7 @@ Example:
     To remove the pages 2, 3 and 4 run:
     python pdf_manager.py -i input.pdf -o output.pdf -p 2,3,4 -w remove
 
-    - remove some pages:
+    - change pages order:
     To change to page order to page 3 then 2 then 1, run:
     python pdf_manager.py -i input.pdf -o output.pdf -p 2,1,0 -w changeorder
 """
