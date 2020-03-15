@@ -36,3 +36,4 @@
     To the one page pdf with pages 2, 3 and 4 run:
     python pdf_manager.py -i test.pdf -o outputremove.pdf -w overlay
         -m overlay.pdf -p 1,2,3
+	Do not specify -p if you want to merge with all pages (for instance, to put "Confidential" on all pages)
