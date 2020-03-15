@@ -6,7 +6,9 @@ PDF manager:
     - remove pages
     - change pages order
     - compress pdf
-    - add signature to pages (TODO)
+    - overlay each pdf page with a one page pdf
+      (useful to add a signature at specific pages
+      or to put "confidential" on all pages)
 
 Args:
     - Path to the pdf file
@@ -32,6 +34,11 @@ Example:
     - change pages order:
     To change to page order to page 3 then 2 then 1, run:
     python pdf_manager.py -i input.pdf -o output.pdf -p 2,1,0 -w changeorder
+
+    - merge one page pdf on specified pages or all:
+    To the one page pdf with pages 2, 3 and 4 run:
+    python pdf_manager.py -i test.pdf -o outputremove.pdf -w overlay
+        -m overlay.pdf -p 1,2,3
 """
 
 import argparse
@@ -123,6 +130,39 @@ def change_order(pdf_file, output_path, new_indexes):
         output.write(f)
 
 
+def merge_pdf_files(pdf_file, output_path, path_overlay, pages):
+    '''overlay specified pages with a one page pdf
+
+    Args:
+        - pdf_file        (str): path to the pdf file
+        - output_path     (str): path to the output pdf file
+        - path_overlay    (str): path to one page pdf to overlay
+    '''
+    with open(pdf_file, "rb") as inFile, open(path_overlay, "rb") as overlay:
+            original = PdfFileReader(inFile)
+            foreground = PdfFileReader(overlay).getPage(0)
+
+            # add all pages to a writer
+            writer = PdfFileWriter()
+
+            # merge on pages specified (on all if not specified)
+            if pages is None:
+                pages_to_merge = range(original.getNumPages())
+            else:
+                pages_to_merge = [int(p) for p in pages.split(',')]
+
+            for i in range(original.getNumPages()):
+                background = original.getPage(i)
+                if i in pages_to_merge:
+                    # merge the first two pages
+                    background.mergePage(foreground)
+                writer.addPage(background)
+
+            # write everything in the writer to a file
+            with open(output_path, "wb") as outFile:
+                writer.write(outFile)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -143,7 +183,7 @@ def main():
         "-w",
         "--wishto",
         required=True,
-        choices=['remove', 'keep', 'compress', 'changeorder'],
+        choices=['remove', 'keep', 'compress', 'changeorder', 'overlay'],
         type=str,
         help="Option wanted."
     )
@@ -171,6 +211,14 @@ def main():
         type=str,
         help="List of pages concerned: 1,2,5,11"
     )
+    parser.add_argument(
+        "-m",
+        "--merge_overlay",
+        required=False,
+        type=str,
+        help="Path to a pdf of a page to be overlaid with the pages specified\
+              with the -p argument (all if not specified)"
+    )
 
     args = parser.parse_args()
 
@@ -188,6 +236,9 @@ def main():
     elif args.wishto == "changeorder":
         pages = [int(p) for p in args.pages.split(',')]
         change_order(args.input_pdf, args.output_pdf, pages)
+    elif args.wishto == "overlay":
+        merge_pdf_files(args.input_pdf, args.output_pdf,
+                        args.merge_overlay, args.pages)
 
 
 if __name__ == '__main__':
