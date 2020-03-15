@@ -14,11 +14,19 @@ Args:
     - List of pages concerned
 
 Example:
-    - compression
+    - compression:
     install GhostScript from https://www.ghostscript.com/download/gsdnld.html
     then run:
-    python pages_manager.py -i input.pdf -o output.pdf\
+    python pdf_manager.py -i input.pdf -o output.pdf\
         -w compress -g path/to/gswin64c.exe
+
+    - keep some pages:
+    To keep the pages 2, 3 and 4 run:
+    python pdf_manager.py -i input.pdf -o output.pdf -l 2,3,4 -w keep
+
+    - remove some pages:
+    To remove the pages 2, 3 and 4 run:
+    python pdf_manager.py -i input.pdf -o output.pdf -l 2,3,4 -w remove
 """
 
 import argparse
