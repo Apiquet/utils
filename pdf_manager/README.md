@@ -1,8 +1,8 @@
 # PDF manager:
-    - remove pages (TODO)
-    - change pages order (TODO)
+    - remove pages
+    - change pages order
     - compress pdf
-    - add signature to pages (TODO)
+    - add signature to pages
 
 # Args:
     - Path to the pdf file
