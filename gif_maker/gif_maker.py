@@ -38,6 +38,7 @@ Example:
     - create multiple gif files:
     python gif_maker.py -i img_path/ -n 2
     will create two gif, each with half of the images
+    This option divides the images into n parts for each gif.
 
     - advanced use:
     All the options can be combined, for instance:
