@@ -11,10 +11,12 @@ Args:
     - Path to the images
     (OPTIONAL)
     - Output path
-    - extension if only images with specific extension is wanted
+    - Extension if only images with specific extension is wanted
     - FPS (default is 30)
-    - resize factor for the images to build the gif
-    - number of gifs wanted to avoid having a huge one (default is 1)
+    - Resize factor for the images to build the gif
+    - Keep resized images into a separated folder
+    - Number of gifs wanted to avoid having a huge one (default is 1)
+    - Suffix to gif name
 
 Example:
 
