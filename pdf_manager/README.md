@@ -32,8 +32,12 @@
     To change to pages order to page 3 then 2 then 1, run:
     python pdf_manager.py -i input.pdf -o output.pdf -p 2,1,0 -w changeorder
 
-## merge one page pdf on specified pages or all:
-    To the one page pdf with pages 2, 3 and 4 run:
-    python pdf_manager.py -i test.pdf -o outputremove.pdf -w overlay
+## Overlay specified pages with a one page pdf:
+    To overlay pages 2, 3 and 4 with the one page pdf 'overlay.pdf' run:
+    python pdf_manager.py -i test.pdf -o output.pdf -w overlay
         -m overlay.pdf -p 1,2,3
-	Do not specify -p if you want to merge with all pages (for instance, to put "Confidential" on all pages)
+    Do not specify -p if you want to overlay on all pages
+
+## Merge several pdf files:
+    To merge pdf files '1.pdf', '2.pdf', '3.pdf' run:
+    python pdf_manager.py -i 1.pdf,2.pdf,3.pdf -o output.pdf -w merge

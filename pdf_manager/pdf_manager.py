@@ -9,9 +9,10 @@ PDF manager:
     - overlay each pdf page with a one page pdf
       (useful to add a signature at specific pages
       or to put "confidential" on all pages)
+    - merge several pdf files
 
 Args:
-    - Path to the pdf file
+    - Path to the pdf file(s)
     - Option wanted
     - List of pages concerned
 
@@ -43,7 +44,7 @@ Example:
 
 import argparse
 import os
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from PyPDF2 import PdfFileWriter, PdfFileReader, PdfFileMerger
 
 
 def compress_pdf(pdf_file, output_path, power_compression, gs_path):
@@ -130,13 +131,14 @@ def change_order(pdf_file, output_path, new_indexes):
         output.write(f)
 
 
-def merge_pdf_files(pdf_file, output_path, path_overlay, pages):
+def overlay_pdf_files(pdf_file, output_path, path_overlay, pages):
     '''overlay specified pages with a one page pdf
 
     Args:
         - pdf_file        (str): path to the pdf file
         - output_path     (str): path to the output pdf file
         - path_overlay    (str): path to one page pdf to overlay
+        - pages           (str): number of pages concerned separated by comma
     '''
     with open(pdf_file, "rb") as inFile, open(path_overlay, "rb") as overlay:
             original = PdfFileReader(inFile)
@@ -163,6 +165,23 @@ def merge_pdf_files(pdf_file, output_path, path_overlay, pages):
                 writer.write(outFile)
 
 
+def merge_pdf_files(pdf_file, output_path):
+    '''overlay specified pages with a one page pdf
+
+    Args:
+        - pdf_file        (str): path to the pdf files separated by a comma
+        - output_path     (str): path to the output pdf file
+    '''
+    pdf_files = pdf_file.split(',')
+    merger = PdfFileMerger()
+
+    for pdf_file_path in pdf_files:
+        merger.append(pdf_file_path)
+
+    merger.write(output_path)
+    merger.close()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -183,7 +202,8 @@ def main():
         "-w",
         "--wishto",
         required=True,
-        choices=['remove', 'keep', 'compress', 'changeorder', 'overlay'],
+        choices=['remove', 'keep', 'compress',
+                 'changeorder', 'overlay', 'merge'],
         type=str,
         help="Option wanted."
     )
@@ -237,8 +257,10 @@ def main():
         pages = [int(p) for p in args.pages.split(',')]
         change_order(args.input_pdf, args.output_pdf, pages)
     elif args.wishto == "overlay":
-        merge_pdf_files(args.input_pdf, args.output_pdf,
-                        args.merge_overlay, args.pages)
+        overlay_pdf_files(args.input_pdf, args.output_pdf,
+                          args.merge_overlay, args.pages)
+    elif args.wishto == "merge":
+        merge_pdf_files(args.input_pdf, args.output_pdf)
 
 
 if __name__ == '__main__':
