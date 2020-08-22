@@ -4,17 +4,18 @@
 """
 Gif maker
 
-Load all images from a directory
-Create a gif with them
+Load all images from a directory or a video
+Create a gif from the input
 
 Args:
-    - Path to the images
+    - Path to the images or a video
     (OPTIONAL)
     - Output path
     - Extension if only images with specific extension is wanted
     - FPS (default is 30)
     - Resize factor for the images to build the gif
     - Keep resized images into a separated folder
+    - Frames to keep: if we want to keep 1 frame every N frames from the video
     - Number of gifs wanted to avoid having a huge one (default is 1)
     - Suffix to gif name
 
