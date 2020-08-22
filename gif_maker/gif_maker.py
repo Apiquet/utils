@@ -264,7 +264,8 @@ def main():
         else:
             fps = args.fps
 
-        writer = imageio.get_writer(output_dir + 'video2gif.gif', fps=fps)
+        output_gif = output_dir + 'video2gif' + args.suffix + '.gif'
+        writer = imageio.get_writer(output_gif, fps=fps)
         for i, img in enumerate(reader):
             if i % args.skip == 0:
                 sys.stdout.write("\rframe {0}".format(i))
@@ -273,11 +274,10 @@ def main():
         writer.close()
 
         if args.resize_fact is not None:
-            img = Image.open(output_dir + 'video2gif.gif')
+            img = Image.open(output_gif)
             new_size = (img.size[0]//args.resize_fact,
                         img.size[1]//args.resize_fact)
-            resize_gif(output_dir + 'video2gif.gif',
-                       save_as=None, resize_to=new_size)
+            resize_gif(output_gif, save_as=None, resize_to=new_size)
         return
 
     imgs = [img for img in sorted(glob(args.input_path + '/*' +
