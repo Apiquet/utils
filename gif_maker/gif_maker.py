@@ -76,8 +76,103 @@ from glob import glob
 import imageio
 import numpy as np
 import os
+from PIL import Image, ImageSequence
 import sys
 from tqdm import tqdm
+
+
+def analyseImage(path):
+    """
+    Pre-process pass over the image to determine the mode (full or additive).
+    Necessary as assessing single frames isn't reliable.
+    Need to know the mode before processing all frames.
+    """
+    im = Image.open(path)
+    results = {
+        'size': im.size,
+        'mode': 'full',
+    }
+    try:
+        while True:
+            if im.tile:
+                tile = im.tile[0]
+                update_region = tile[1]
+                update_region_dimensions = update_region[2:]
+                if update_region_dimensions != im.size:
+                    results['mode'] = 'partial'
+                    break
+            im.seek(im.tell() + 1)
+    except EOFError:
+        pass
+    return results
+
+
+def extract_and_resize_frames(path, resize_to=None):
+    """
+    Iterate the GIF, extracting each frame and resizing them
+
+    Returns:
+        An array of all frames
+    """
+    mode = analyseImage(path)['mode']
+
+    im = Image.open(path)
+
+    if not resize_to:
+        resize_to = (im.size[0] // 2, im.size[1] // 2)
+
+    i = 0
+    p = im.getpalette()
+    last_frame = im.convert('RGBA')
+
+    all_frames = []
+
+    try:
+        while True:
+            if not im.getpalette():
+                im.putpalette(p)
+
+            new_frame = Image.new('RGBA', im.size)
+
+            if mode == 'partial':
+                new_frame.paste(last_frame)
+
+            new_frame.paste(im, (0, 0), im.convert('RGBA'))
+
+            new_frame.thumbnail(resize_to, Image.ANTIALIAS)
+            all_frames.append(new_frame)
+
+            i += 1
+            last_frame = new_frame
+            im.seek(im.tell() + 1)
+    except EOFError:
+        pass
+
+    return all_frames
+
+
+def resize_gif(path, save_as=None, resize_to=None):
+    """
+    Resizes the GIF to a given length:
+
+    Args:
+        path: the path to the GIF file
+        save_as (optional): Path of the resized gif.
+        If not set, the original gif will be overwritten.
+        resize_to (optional): new size of the gif. Format: (int, int).
+        If not set, the original GIF will be resized to half of its size.
+    """
+    all_frames = extract_and_resize_frames(path, resize_to)
+
+    if not save_as:
+        save_as = path
+
+    if len(all_frames) == 1:
+        print("Warning: only 1 frame found")
+        all_frames[0].save(save_as, optimize=True)
+    else:
+        all_frames[0].save(save_as, optimize=True, save_all=True,
+                           append_images=all_frames[1:], loop=1000)
 
 
 def main():
@@ -175,6 +270,13 @@ def main():
                 sys.stdout.flush()
                 writer.append_data(img)
         writer.close()
+
+        if args.resize_fact is not None:
+            img = Image.open(output_dir + 'video2gif.gif')
+            new_size = (img.size[0]//args.resize_fact,
+                        img.size[1]//args.resize_fact)
+            resize_gif(output_dir + 'video2gif.gif',
+                       save_as=None, resize_to=new_size)
         return
 
     imgs = [img for img in sorted(glob(args.input_path + '/*' +
