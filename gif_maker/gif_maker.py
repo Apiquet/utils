@@ -76,6 +76,7 @@ from glob import glob
 import imageio
 import numpy as np
 import os
+import sys
 from tqdm import tqdm
 
 
@@ -83,10 +84,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
-        "--path_to_imgs",
+        "--input_path",
         required=True,
         type=str,
-        help="Path to the images."
+        help="Path to the images or a video."
     )
     parser.add_argument(
         "-o",
@@ -136,6 +137,14 @@ def main():
         help="Set number of gif wanted (default is 1)."
     )
     parser.add_argument(
+        "-p",
+        "--skip",
+        required=False,
+        default=1,
+        type=int,
+        help="To speed up the video, the script will keep 1 frame / skip."
+    )
+    parser.add_argument(
         "-s",
         "--suffix",
         required=False,
@@ -146,20 +155,36 @@ def main():
 
     args = parser.parse_args()
 
-    imgs = [img for img in sorted(glob(args.path_to_imgs + '/*' +
-                                       args.extension))
-            if ".gif" not in img]
-    assert len(imgs) > 0, "No image found: " + args.path_to_imgs +\
-        '/*' + args.extension
-
     if args.output_path is None:
-        output_dir = args.path_to_imgs
+        output_dir = os.path.dirname(args.input_path) + '/'
     else:
         output_dir = args.output_path + '/'
         os.makedirs(output_dir, exist_ok=True)
 
+    if os.path.isfile(args.input_path):
+        reader = imageio.get_reader(args.input_path)
+        if args.fps is None:
+            fps = reader.get_meta_data()['fps']
+        else:
+            fps = args.fps
+
+        writer = imageio.get_writer(output_dir + 'video2gif.gif', fps=fps)
+        for i, img in enumerate(reader):
+            if i % args.skip == 0:
+                sys.stdout.write("\rframe {0}".format(i))
+                sys.stdout.flush()
+                writer.append_data(img)
+        writer.close()
+        return
+
+    imgs = [img for img in sorted(glob(args.input_path + '/*' +
+                                       args.extension))
+            if ".gif" not in img]
+    assert len(imgs) > 0, "No image found: " + args.input_path +\
+        '/*' + args.extension
+
     if args.resize_fact is not None:
-        tmp_folder = args.path_to_imgs + '/tmp_imgs'
+        tmp_folder = args.input_path + '/tmp_imgs'
         os.makedirs(tmp_folder, exist_ok=True)
         for img_path in imgs:
             img = cv2.imread(img_path)
