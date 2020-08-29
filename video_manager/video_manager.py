@@ -2,47 +2,38 @@
 # -*- coding: utf-8 -*-
 
 """
-Video manager
+Concatenate list of videos or folder of videos, change speed and resize videos
 
 Args:
     - Path to the video(s)
-    - Path to the output video
+    (OPTIONAL)
+    - Output path
+    - FPS (default is 30)
+    - Resize factor for the images to build the gif
+    - Frames to keep: if we want to keep 1 frame every N frames from the video
 
-Example:
-    python3 video_manager.py -i path/to/video.mp4 -o path/to/output_video.mp4
+Example to concatenate multiple videos within a folder and change the fps:
+    python3 video_manager.py -i path/to/folder_with_videos/ --fps 60
+
+Example to concatenate two videos and reduce the output resolution by 3:
+    python3 video_manager.py -i path/to/video1.mp4,path/to/video2.mp4 -r 3
 """
 
 import argparse
 import cv2
 from glob import glob
-
-
-def extract(compressedfile, extract_path):
-    '''Extract files
-
-    Args:
-        - compressedfile    (str) : path to the compressed file
-        - extract_path      (str) : path for the extracted files
-    '''
-    shutil.unpack_archive(compressedfile, extract_path)
+import os
+from tqdm import tqdm
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
-        "--input",
+        "--input_videos",
         required=True,
         type=str,
-        help="Folder containing video(s)."
-    )
-    parser.add_argument(
-        "-w",
-        "--wish",
-        choices=['speedup', 'concat'],
-        required=True,
-        type=str,
-        help="Action wanted."
+        help="Video path separated by a comma."
     )
     parser.add_argument(
         "-k",
@@ -54,7 +45,6 @@ def main():
         video with a crazy FPS."
     )
     parser.add_argument(
-        "-f",
         "--fps",
         required=False,
         type=int,
@@ -62,29 +52,48 @@ def main():
         help="New fps to set"
     )
     parser.add_argument(
+        "-r",
+        "--resize_fact",
+        required=False,
+        default=1,
+        type=float,
+        help="Divide size of images n times (default is 1)."
+    )
+    parser.add_argument(
         "-o",
-        "--output_name",
-        required=True,
+        "--output_path",
+        required=False,
         type=str,
         help="Output path."
     )
 
     args = parser.parse_args()
-    
-    videos_path = sorted(glob(args.input + "/*"))
-    
-    out = cv2.VideoWriter(args.input + '/' + args.output_name + '.avi',
-                          cv2.VideoWriter_fourcc('M','J','P','G'),
-                          args.fps, (1920,1080))
-    
-    for video_path in videos_path:
-        cap = cv2.VideoCapture(video_path)
 
+    if ',' not in args.input_videos:
+        videos_path = sorted(glob(args.input_videos + "/*"))
+    else:
+        videos_path = args.input_videos.split(',')
+
+    if args.output_path is None:
+        args.output_path = os.path.dirname(videos_path[0]) +\
+            '/output_video.mp4'
+
+    vcap = cv2.VideoCapture(videos_path[0])
+    width = int(vcap.get(cv2.CAP_PROP_FRAME_WIDTH) // args.resize_fact)
+    height = int(vcap.get(cv2.CAP_PROP_FRAME_HEIGHT) // args.resize_fact)
+
+    out = cv2.VideoWriter(args.output_path, 0x7634706d,
+                          args.fps, (width, height))
+    print((width, height))
+
+    for video_path in tqdm(videos_path):
+        cap = cv2.VideoCapture(video_path)
         i = 0
         while(cap.isOpened()):
             i = i + 1
             ret, frame = cap.read()
-            if ret and i%args.skip == 0:
+            if ret and i % args.skip == 0:
+                frame = cv2.resize(frame, (width, height))
                 out.write(frame)
             elif not ret:
                 break
