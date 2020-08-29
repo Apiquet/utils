@@ -36,6 +36,13 @@ def main():
         help="Video path separated by a comma."
     )
     parser.add_argument(
+        "-f",
+        "--isFolder",
+        action='store_true',
+        help="To specify if the input is a folder\
+             The script will take all contained files"
+    )
+    parser.add_argument(
         "-k",
         "--skip",
         required=False,
@@ -69,7 +76,7 @@ def main():
 
     args = parser.parse_args()
 
-    if ',' not in args.input_videos:
+    if os.path.isdir(args.input_videos):
         videos_path = sorted(glob(args.input_videos + "/*"))
     else:
         videos_path = args.input_videos.split(',')
@@ -84,7 +91,6 @@ def main():
 
     out = cv2.VideoWriter(args.output_path, 0x7634706d,
                           args.fps, (width, height))
-    print((width, height))
 
     for video_path in tqdm(videos_path):
         cap = cv2.VideoCapture(video_path)
