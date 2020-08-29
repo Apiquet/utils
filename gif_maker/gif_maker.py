@@ -214,7 +214,7 @@ def main():
         "--resize_fact",
         required=False,
         default=None,
-        type=int,
+        type=float,
         help="Divide size of images n times (default is 1)."
     )
     parser.add_argument(
