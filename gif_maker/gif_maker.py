@@ -12,6 +12,7 @@ Args:
     (OPTIONAL)
     - Output path
     - Extension if only images with specific extension is wanted
+    - Add an image specified time to the end of the gif
     - FPS (default is 30)
     - Resize factor for the images to build the gif
     - Keep resized images into a separated folder
@@ -202,6 +203,14 @@ def main():
         help="Extension to look for within the image dir."
     )
     parser.add_argument(
+        "-a",
+        "--add_image",
+        required=False,
+        default=".*",
+        type=str,
+        help="Path/to/img.png,number_of_times"
+    )
+    parser.add_argument(
         "-f",
         "--fps",
         required=False,
@@ -271,6 +280,17 @@ def main():
                 sys.stdout.write("\rframe {0}".format(i))
                 sys.stdout.flush()
                 writer.append_data(img)
+        if args.add_image is not None:
+            path_n_times = args.add_image.split(',')
+            img_path, times = path_n_times[0], path_n_times[1]
+            image = cv2.imread(img_path)
+            image = cv2.resize(image, (img.shape[1], img.shape[0]))
+            cv2.imwrite(os.path.dirname(img_path) + '/res_' +
+                        os.path.basename(img_path), image)
+            image = imageio.imread(os.path.dirname(img_path) +
+                                   '/res_' + os.path.basename(img_path))
+            for i in tqdm(range(int(times))):
+                writer.append_data(image)
         writer.close()
 
         if args.resize_fact is not None:
