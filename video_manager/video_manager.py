@@ -36,13 +36,6 @@ def main():
         help="Video path separated by a comma."
     )
     parser.add_argument(
-        "-f",
-        "--isFolder",
-        action='store_true',
-        help="To specify if the input is a folder\
-             The script will take all contained files"
-    )
-    parser.add_argument(
         "-k",
         "--skip",
         required=False,
