@@ -1,6 +1,7 @@
 # Video manager:
     - Change resolution of video(s)
     - Change fps of video(s)
+    - Remove 1/N frames to reduce the videos' size
     - Concatenate videos from a list or a folder
 
 # Args:
