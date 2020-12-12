@@ -192,7 +192,7 @@ def main():
         required=False,
         default=None,
         type=str,
-        help="Path to store playback images."
+        help="Path to the output gif."
     )
     parser.add_argument(
         "-e",
@@ -206,7 +206,7 @@ def main():
         "-a",
         "--add_image",
         required=False,
-        default=".*",
+        default=None,
         type=str,
         help="Path/to/img.png,number_of_times"
     )
@@ -289,6 +289,10 @@ def main():
                         os.path.basename(img_path), image)
             image = imageio.imread(os.path.dirname(img_path) +
                                    '/res_' + os.path.basename(img_path))
+            if args.nb_gif == 2:
+                writer.close()
+                output_gif = output_dir + 'video2gif_2' + args.suffix + '.gif'
+                writer = imageio.get_writer(output_gif, fps=1)
             for i in tqdm(range(int(times))):
                 writer.append_data(image)
         writer.close()
