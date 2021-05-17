@@ -197,7 +197,7 @@ def main():
     images_list_path = sorted(glob(images_directory + '/*'))
     cv2_images = []
 
-    print("Read images...")
+    print("\nRead images...")
     for i, image_path in tqdm(enumerate(images_list_path)):
         img = cv2.imread(image_path)
         if args.resize_fact is not None:
@@ -210,8 +210,7 @@ def main():
         img_path, times = \
             args.add_image.split(',')[0], args.add_image.split(',')[1]
         images = cv2.imread(img_path)
-        images = cv2.resize(images, (int(img.shape[1]*args.resize_fact),
-                                     int(img.shape[0]*args.resize_fact)))
+        images = cv2.resize(images, (img.shape[1], img.shape[0]))
         rgb_img = cv2.cvtColor(images, cv2.COLOR_BGR2RGB)
         for _ in tqdm(range(int(times))):
             cv2_images.append(rgb_img)
