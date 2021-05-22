@@ -5,6 +5,7 @@
 # Args:
     - Path to the folder
     - name for the .bin file (default is folder_name.bin)
+    - delimiter to use
 
 # Examples:
 
@@ -14,4 +15,4 @@
 
 ## extract .bin file:
     python folder_to_binary.py -i mybin.bin
-    will create mybin.bin to mybin/ with all files
+    will create mybin/ with all files
