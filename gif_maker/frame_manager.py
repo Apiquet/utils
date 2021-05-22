@@ -4,72 +4,31 @@
 """
 Frame manager
 
-Load all images from a directory or a video
-Create a gif from the input
+Extract frames from .gif/.mp4 input file (or load frames if directory as input)
+Create a gif from the frames with options
 
 Args:
     - Path to the images or a video
     (OPTIONAL)
     - Output path
     - Extension if only images with specific extension is wanted
-    - Add an image specified time to the end of the gif
+    - Add an image to the end of the gif (n times)
     - FPS (default is 30)
     - Resize factor for the images to build the gif
-    - Keep resized images into a separated folder
+    - Keep extracted images from the .gif/.mp4
     - Frames to keep: if we want to keep 1 frame every N frames from the video
-    - Number of gifs wanted to avoid having a huge one (default is 1)
-    - Suffix to gif name
+    - gif name (default is result.gif)
 
 Example:
 
-    - simple use:
     python gif_maker.py -i img_path/
-    will create a gif at 30 fps as gif_0.gif in the img_path directory
-    (optional)
-    1- Change fps with -f option, -f 20 will set fsp to 20
-    2- Add a suffix to the gif created with -s option
-    3- Only select images with specific extension: -e option
-        with -e png, the program will only select png images
+    will create a gif at 30 fps as result.gif in the img_path directory
 
-    - resize images before creating the gif:
-    python gif_maker.py -i img_path/ -r 2
-    will create a img_path/tmp_imgs/ with all the images with size divided by 2
-    will create a gif at 30 fps as gif_0.gif in the img_path directory
-    (optional)
-    To keep the tmp_folder/, specify -k option,
-    otherwise it will be deleted
-
-    - create multiple gif files:
-    python gif_maker.py -i img_path/ -n 2
-    will create two gif, each with half of the images
-    This option divides the images into n parts for each gif.
-
-    - advanced use:
-    All the options can be combined, for instance:
-    With a directory of images:
-    ├──imgs/
-    |  ├──0001.png
-    |  ├──0002.jpg
-    |  ├──0003.png
-    |  ├──0004.png
-    |  ├──0005.png
-
-    python gif_maker.py -i img_path/ -f 15 -n 2 -s "test" -e png -r 2 -k
-    will create:
-    ├──imgs/
-    |  ├──gif_0_test.gif
-    |  ├──gif_1_test.gif
-    |  ├──0001.png
-    |  ├──...
-    |  ├──tmp_imgs/
-    |  |  ├──0001.png
-    |  |  ├──0003.png
-    |  |  ├──0004.png
-    |  |  ├──0005.png
-
-    gif_0_test.gif is a gif at 15 fps with 0001.png and 0003.png
-    gif_1_test.gif is a gif at 15 fps with 0004.png and 0005.png
-    The images' size were divided by 2 and stored under tmp_imgs/
+    - extract images from .mp4 video
+    python gif_maker.py -i video.mp4 -p 4
+    will extract all the video frames to tmp_images/ folder and create a gif
+    at 30 fps with 1/4 of frames
+    
 """
 
 import argparse
@@ -84,15 +43,16 @@ import sys
 from tqdm import tqdm
 
 
-def extract_gif(gif_path, output_path, skip):
+def extract_gif(gif_path, output_path, skip, extension='png'):
     gif_object = Image.open(gif_path)
     for i, frame in tqdm(enumerate(range(gif_object.n_frames))):
         gif_object.seek(frame)
         if i%skip == 0:
-            gif_object.save(output_path + "frame_{0:08d}.png".format(i))
+            gif_object.save(
+                output_path + "frame_{0:08d}.{}".format(i, entension))
 
 
-def extract_video(video_path, output_path, skip):
+def extract_video(video_path, output_path, skip, extension='png'):
     vidoe_capture = cv2.VideoCapture(video_path)
     success, image = vidoe_capture.read()
     i = 0
@@ -100,7 +60,8 @@ def extract_video(video_path, output_path, skip):
         sys.stdout.write("\rframe {0}".format(i))
         sys.stdout.flush()
         if i%skip == 0:
-            cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)    
+            cv2.imwrite(
+                output_path + "frame_{0:08d}.{}".format(i, extension), image)
         success, image = vidoe_capture.read()
         i += 1
 
@@ -150,16 +111,16 @@ def main():
         "-r",
         "--resize_fact",
         required=False,
-        default=None,
+        default=1,
         type=float,
-        help="Divide size of images n times (default is 1)."
+        help="Multiply image resolution by given number (default is 1)."
     )
     parser.add_argument(
         "-k",
         "--keep_extracted_imgs",
         required=False,
         action="store_true",
-        help="To keep the resized images (if -r option was specified)."
+        help="To keep the resized images if input is a .gif/.mp4 file."
     )
     parser.add_argument(
         "-p",
@@ -173,9 +134,9 @@ def main():
         "-n",
         "--gif_name",
         required=False,
-        default="",
+        default="result.gif",
         type=str,
-        help="Add suffix to the gif name."
+        help="Output gif name."
     )
 
     args = parser.parse_args()
@@ -183,6 +144,7 @@ def main():
 
     images_directory = input_directory
 
+    # if input if gif or mp4: extract all images
     if os.path.isfile(args.input_path):
         print("Extract images...")
         images_directory += 'tmp_images/'
@@ -190,21 +152,23 @@ def main():
 
         file_directory = os.path.dirname(args.input_path) + '/'
         if os.path.basename(args.input_path).split('.')[-1] == 'gif':
-            extract_gif(args.input_path, images_directory, args.skip)
+            extract_gif(args.input_path, images_directory, args.skip,
+                        args.extension)
         if os.path.basename(args.input_path).split('.')[-1] == 'mp4':
-            extract_video(args.input_path, images_directory, args.skip)
+            extract_video(args.input_path, images_directory, args.skip,
+                          args.extension)
 
-    images_list_path = sorted(glob(images_directory + '/*'))
+    images_list_path = sorted(glob(images_directory + '/' + args.extension))
     cv2_images = []
 
     print("\nRead images...")
     for i, image_path in tqdm(enumerate(images_list_path)):
         img = cv2.imread(image_path)
-        if args.resize_fact is not None:
-            img = cv2.resize(img, (int(img.shape[1]*args.resize_fact),
-                                   int(img.shape[0]*args.resize_fact)))
+        img = cv2.resize(img, (int(img.shape[1]*args.resize_fact),
+                               int(img.shape[0]*args.resize_fact)))
         cv2_images.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
+    # add image at the end of the cv2_images list
     if args.add_image is not None:
         print("Add image...")
         img_path, times = \
@@ -217,20 +181,19 @@ def main():
 
     print("Create gif...")
 
-    output_gif_path = ''
+    # get gif name
     output_gif_name = args.gif_name
-
-    if args.gif_name == "":
-        output_gif_name = "results.gif"
     elif args.gif_name.split('.')[-1] != 'gif':
         output_gif_name += '.gif'
 
+    # get gif path
     output_gif_path = args.output_path + '/' + output_gif_name
     if args.output_path == "":
         output_gif_path = input_directory + '/' + output_gif_name
     elif args.output_path.split('.')[-1] == 'gif':
         output_gif_path = args.output_path
 
+    # create gif
     os.makedirs(os.path.dirname(output_gif_path), exist_ok=True)
     with imageio.get_writer(output_gif_path, mode="I", fps=args.fps) as writer:
         for i, frame in tqdm(enumerate(cv2_images)):
