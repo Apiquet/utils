@@ -1,9 +1,9 @@
 # Some useful programs
+
+- frame_manager: a program to create a .gif files from a folder of images of a .gif/.mp4 file with several options
  
-- a program to manage pdf files (compression, remove or keep pages, change pages order, merge several pdf files and overlay a pdf file with another)
+- pdf_manager: a program to manage pdf files (compression, remove or keep pages, change pages order, merge several pdf files and overlay a pdf file with another)
 
-- a program to uncompress files (tar.gz, tar, zip, etc.)
+- uncompress: a program to uncompress files (tar.gz, tar, zip, etc.)
 
-- a program to create gif files with several options
-
-- a program to manager videos with several options
+- video_manager: a program to manager videos with several options
