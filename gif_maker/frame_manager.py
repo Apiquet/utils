@@ -28,7 +28,12 @@ Example:
     python gif_maker.py -i video.mp4 -p 4
     will extract all the video frames to tmp_images/ folder and create a gif
     at 30 fps with 1/4 of frames
-    
+
+    - extract images from .gif file
+    python gif_maker.py -i mygif.gif -r 0.5 -n resized_gif.gif -k -f 10
+    will extract all the gif frames from mygif.gif to tmp_images/ folder
+    will create a new gif resized_gif.gif with resolution divided by 2, at 10 fps
+    will not remove the tmp_images/ folder
 """
 
 import argparse
@@ -49,7 +54,7 @@ def extract_gif(gif_path, output_path, skip, extension='png'):
         gif_object.seek(frame)
         if i%skip == 0:
             gif_object.save(
-                output_path + "frame_{0:08d}.{}".format(i, entension))
+                output_path + "frame_{0:08d}.{1}".format(i, extension))
 
 
 def extract_video(video_path, output_path, skip, extension='png'):
@@ -61,7 +66,7 @@ def extract_video(video_path, output_path, skip, extension='png'):
         sys.stdout.flush()
         if i%skip == 0:
             cv2.imwrite(
-                output_path + "frame_{0:08d}.{}".format(i, extension), image)
+                output_path + "frame_{0:08d}.{1}".format(i, extension), image)
         success, image = vidoe_capture.read()
         i += 1
 
@@ -73,7 +78,7 @@ def main():
         "--input_path",
         required=True,
         type=str,
-        help="Path to the images or a video."
+        help="Path to a folder of images (with '\\') or a .gif/.mp4 file."
     )
     parser.add_argument(
         "-o",
@@ -152,13 +157,11 @@ def main():
 
         file_directory = os.path.dirname(args.input_path) + '/'
         if os.path.basename(args.input_path).split('.')[-1] == 'gif':
-            extract_gif(args.input_path, images_directory, args.skip,
-                        args.extension)
+            extract_gif(args.input_path, images_directory, args.skip)
         if os.path.basename(args.input_path).split('.')[-1] == 'mp4':
-            extract_video(args.input_path, images_directory, args.skip,
-                          args.extension)
+            extract_video(args.input_path, images_directory, args.skip)
 
-    images_list_path = sorted(glob(images_directory + '/' + args.extension))
+    images_list_path = sorted(glob(images_directory + '/*' + args.extension))
     cv2_images = []
 
     print("\nRead images...")
@@ -183,13 +186,15 @@ def main():
 
     # get gif name
     output_gif_name = args.gif_name
-    elif args.gif_name.split('.')[-1] != 'gif':
+    if args.gif_name.split('.')[-1] != 'gif':
         output_gif_name += '.gif'
 
     # get gif path
     output_gif_path = args.output_path + '/' + output_gif_name
-    if args.output_path == "":
+    if args.output_path == "" and os.path.isfile(args.input_path):
         output_gif_path = input_directory + '/' + output_gif_name
+    elif args.output_path == "":
+        output_gif_path = input_directory + '/../' + output_gif_name
     elif args.output_path.split('.')[-1] == 'gif':
         output_gif_path = args.output_path
 
@@ -200,7 +205,7 @@ def main():
             writer.append_data(frame)
     writer.close()
     
-    if not args.keep_extracted_imgs:
+    if not args.keep_extracted_imgs and os.path.isfile(args.input_path):
         [os.remove(img) for img in glob(images_directory + '/*')]
         os.rmdir(images_directory)
 
