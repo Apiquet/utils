@@ -23,8 +23,8 @@ Example:
 """
 
 import argparse
-from glob import glob
 import os
+from pathlib import Path
 from tqdm import tqdm
 
 def main():
@@ -60,12 +60,13 @@ def main():
 
     # if input is directory: encode files to a .bin file
     if os.path.isdir(args.input_path):
-        files_path = glob(args.input_path + '/*')
         binary = b''
 
-        for file_path in tqdm(files_path):
+        for file_path in tqdm(Path(args.input_path).rglob("*.*")):
             # write file name
-            binary += os.path.basename(file_path).encode()
+            file_path = str(file_path)
+            file_hierarchy = file_path.replace(args.input_path, '')
+            binary += file_hierarchy.encode()
             binary += args.delimiter.encode()
 
             # write content
@@ -99,6 +100,8 @@ def main():
             if i%2 == 0:
                 element_name = el.decode()
             else:
+                os.makedirs(os.path.dirname(output_path + element_name),
+                            exist_ok=True)
                 with open(output_path + element_name, "wb") as f:
                     f.write(el)
 
