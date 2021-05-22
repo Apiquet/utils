@@ -69,17 +69,17 @@ def main():
             binary += args.delimiter.encode()
 
             # write content
-            file = open(file_path, "rb")
-            binary += file.read()
+            with open(file_path, "rb") as f:
+                binary += f.read()
             binary += args.delimiter.encode()
 
         if args.output_name is None:
             bin_name = os.path.basename(args.input_path).split('.')[0]
         else:
             bin_name = args.output_name
-        result = open(args.input_path + '/' + bin_name, "wb")
-        result.write(binary)
-        result.close()
+        with open(args.input_path + '/' + bin_name, "wb") as f:
+            f.write(binary)
+
     # if input is .bin file: extract all files from it
     else:
         if args.output_name is None:
@@ -89,20 +89,18 @@ def main():
         output_path = os.path.dirname(args.input_path) + '/' + bin_name + '/'
         os.makedirs(output_path)
 
-        file = open(args.input_path, "rb")
-        elements = list(filter(None, file.read().split(
-            args.delimiter.encode())))
-        file.close()
-        print(len(elements))
-        elements_name = "wrong_name"
+        with open(args.input_path, "rb") as f:
+            elements = list(filter(None, f.read().split(
+                args.delimiter.encode())))
+
+        element_name = "wrong_name"
 
         for i, el in tqdm(enumerate(elements)):
             if i%2 == 0:
                 element_name = el.decode()
             else:
-                file = open(output_path + element_name, "wb")
-                file.write(el)
-                file.close()
+                with open(output_path + element_name, "wb") as f:
+                    f.write(el)
 
 
 if __name__ == '__main__':
