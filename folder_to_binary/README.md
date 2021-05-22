@@ -4,7 +4,9 @@
 
 # Args:
     - Path to the folder
-    - name for the .bin file (default is folder_name.bin)
+    - name for the output file, default is:
+        folder_name_bin if folder as input
+        binary_name_extracted if file as input
     - delimiter to use
 
 # Examples:

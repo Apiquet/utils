@@ -75,7 +75,7 @@ def main():
             binary += args.delimiter.encode()
 
         if args.output_name is None:
-            bin_name = os.path.basename(args.input_path).split('.')[0]
+            bin_name = os.path.basename(args.input_path) + '_bin'
         else:
             bin_name = args.output_name
         with open(args.input_path + '/' + bin_name, "wb") as f:
@@ -84,7 +84,8 @@ def main():
     # if input is .bin file: extract all files from it
     else:
         if args.output_name is None:
-            bin_name = os.path.basename(args.input_path).split('.')[0]
+            bin_name = os.path.basename(
+                args.input_path).split('.')[0] + '_extracted'
         else:
             bin_name = args.output_name
         output_path = os.path.dirname(args.input_path) + '/' + bin_name + '/'
@@ -93,8 +94,6 @@ def main():
         with open(args.input_path, "rb") as f:
             elements = list(filter(None, f.read().split(
                 args.delimiter.encode())))
-
-        element_name = "wrong_name"
 
         for i, el in tqdm(enumerate(elements)):
             if i%2 == 0:
