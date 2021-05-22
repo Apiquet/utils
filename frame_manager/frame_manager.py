@@ -37,27 +37,39 @@ Example:
 """
 
 import argparse
-import cv2
 from glob import glob
-import imageio
-import numpy as np
 import os
-from PIL import Image, GifImagePlugin
-
 import sys
+
+import cv2
+import imageio
+from PIL import Image
 from tqdm import tqdm
 
 
-def extract_gif(gif_path, output_path, skip, extension='png'):
+def extract_gif(gif_path, output_path, skip):
+    '''Extract images from a .gif file to the output_path folder (.png images)
+
+    Args:
+        - gif_path    (str): input gif to extract
+        - output_path (str): path for output .png images
+        - skip        (int): reduce the number of images: keep 1 frame/skip.
+    '''
     gif_object = Image.open(gif_path)
     for i, frame in tqdm(enumerate(range(gif_object.n_frames))):
         gif_object.seek(frame)
         if i%skip == 0:
-            gif_object.save(
-                output_path + "frame_{0:08d}.{1}".format(i, extension))
+            gif_object.save(output_path + "frame_{0:08d}.png".format(i))
 
 
-def extract_video(video_path, output_path, skip, extension='png'):
+def extract_video(video_path, output_path, skip):
+    '''Extract images from a .mp4 file to the output_path folder (.png images)
+
+    Args:
+        - gif_path    (str): input video to extract
+        - output_path (str): path for output .png images
+        - skip        (int): reduce the number of images: keep 1 frame/skip.
+    '''
     vidoe_capture = cv2.VideoCapture(video_path)
     success, image = vidoe_capture.read()
     i = 0
@@ -65,8 +77,7 @@ def extract_video(video_path, output_path, skip, extension='png'):
         sys.stdout.write("\rframe {0}".format(i))
         sys.stdout.flush()
         if i%skip == 0:
-            cv2.imwrite(
-                output_path + "frame_{0:08d}.{1}".format(i, extension), image)
+            cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)
         success, image = vidoe_capture.read()
         i += 1
 
@@ -133,7 +144,7 @@ def main():
         required=False,
         default=1,
         type=int,
-        help="To speed up the video, the script will keep 1 frame / skip."
+        help="To reduce the gif size, the script will keep 1 frame / skip."
     )
     parser.add_argument(
         "-n",
@@ -155,7 +166,6 @@ def main():
         images_directory += 'tmp_images/'
         os.makedirs(images_directory, exist_ok=True)
 
-        file_directory = os.path.dirname(args.input_path) + '/'
         if os.path.basename(args.input_path).split('.')[-1] == 'gif':
             extract_gif(args.input_path, images_directory, args.skip)
         if os.path.basename(args.input_path).split('.')[-1] == 'mp4':
@@ -165,7 +175,7 @@ def main():
     cv2_images = []
 
     print("\nRead images...")
-    for i, image_path in tqdm(enumerate(images_list_path)):
+    for image_path in tqdm(images_list_path):
         img = cv2.imread(image_path)
         img = cv2.resize(img, (int(img.shape[1]*args.resize_fact),
                                int(img.shape[0]*args.resize_fact)))
@@ -201,10 +211,10 @@ def main():
     # create gif
     os.makedirs(os.path.dirname(output_gif_path), exist_ok=True)
     with imageio.get_writer(output_gif_path, mode="I", fps=args.fps) as writer:
-        for i, frame in tqdm(enumerate(cv2_images)):
+        for frame in tqdm(cv2_images):
             writer.append_data(frame)
     writer.close()
-    
+
     if not args.keep_extracted_imgs and os.path.isfile(args.input_path):
         [os.remove(img) for img in glob(images_directory + '/*')]
         os.rmdir(images_directory)
