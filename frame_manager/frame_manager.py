@@ -43,8 +43,24 @@ import sys
 
 import cv2
 import imageio
+import numpy as np
 from PIL import Image
 from tqdm import tqdm
+
+def overlap_two_images(img1, img2):
+    """
+    Function to overlap segmentation map with image
+
+    Args:
+        - (cv2 image) first image
+        - (pil image) second image
+    Return:
+        - (numpy array) overlap between the two input images
+    """
+    overlap = Image.fromarray(img1)    
+    overlap.paste(img2, (0, 0), img2.convert('RGBA'))
+
+    return np.array(overlap)
 
 
 def extract_gif(gif_path, output_path, skip):
@@ -120,7 +136,7 @@ def main():
         "--fps",
         required=False,
         default=30,
-        type=str,
+        type=int,
         help="fps of the output gif, default is 30."
     )
     parser.add_argument(
@@ -154,6 +170,21 @@ def main():
         type=str,
         help="Output gif name."
     )
+    parser.add_argument(
+        "-v",
+        "--overlap",
+        required=False,
+        default=None,
+        type=str,
+        help="Image to overlap with all the others."
+    )
+    parser.add_argument(
+        "-m",
+        "--mp4",
+        required=False,
+        action="store_true",
+        help="To create mp4 video instead of gif file."
+    )
 
     args = parser.parse_args()
     input_directory = os.path.dirname(args.input_path) + '/'
@@ -175,11 +206,19 @@ def main():
     cv2_images = []
 
     print("\nRead images...")
-    for image_path in tqdm(images_list_path):
+    if args.overlap is not None:
+        overlap_image = Image.open(args.overlap)
+
+    for i, image_path in tqdm(enumerate(images_list_path)):
         img = cv2.imread(image_path)
         img = cv2.resize(img, (int(img.shape[1]*args.resize_fact),
                                int(img.shape[0]*args.resize_fact)))
-        cv2_images.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        if args.overlap is not None and i<38:
+            rgb_img = overlap_two_images(rgb_img, overlap_image)
+        cv2_images.append(rgb_img)
+
+    img_height, img_width, _ = img.shape
 
     # add image at the end of the cv2_images list
     if args.add_image is not None:
@@ -187,12 +226,12 @@ def main():
         img_path, times = \
             args.add_image.split(',')[0], args.add_image.split(',')[1]
         images = cv2.imread(img_path)
-        images = cv2.resize(images, (img.shape[1], img.shape[0]))
+        images = cv2.resize(images, (img_width, img_height))
         rgb_img = cv2.cvtColor(images, cv2.COLOR_BGR2RGB)
         for _ in tqdm(range(int(times))):
             cv2_images.append(rgb_img)
 
-    print("Create gif...")
+    print("Create animation...")
 
     # get gif name
     output_gif_name = args.gif_name
@@ -208,12 +247,23 @@ def main():
     elif args.output_path.split('.')[-1] == 'gif':
         output_gif_path = args.output_path
 
-    # create gif
-    os.makedirs(os.path.dirname(output_gif_path), exist_ok=True)
-    with imageio.get_writer(output_gif_path, mode="I", fps=args.fps) as writer:
-        for frame in tqdm(cv2_images):
-            writer.append_data(frame)
-    writer.close()
+    if args.mp4:
+        output_gif_path = output_gif_path.replace('gif', 'mp4')
+        video = cv2.VideoWriter(
+            output_gif_path, cv2.VideoWriter_fourcc(*'mp4v'),
+            args.fps, (img_width, img_height))
+
+        for image in tqdm(cv2_images):
+            video.write(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        video.release()
+    else:
+        # create gif
+        os.makedirs(os.path.dirname(output_gif_path), exist_ok=True)
+        with imageio.get_writer(output_gif_path,
+                                mode="I", fps=args.fps) as writer:
+            for frame in tqdm(cv2_images):
+                writer.append_data(frame)
+        writer.close()
 
     if not args.keep_extracted_imgs and os.path.isfile(args.input_path):
         [os.remove(img) for img in glob(images_directory + '/*')]
