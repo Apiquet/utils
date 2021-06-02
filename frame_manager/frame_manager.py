@@ -197,9 +197,9 @@ def main():
         images_directory += 'tmp_images/'
         os.makedirs(images_directory, exist_ok=True)
 
-        if os.path.basename(args.input_path).split('.')[-1] == 'gif':
+        if os.path.basename(args.input_path).split('.')[-1] in ['gif', 'GIF']:
             extract_gif(args.input_path, images_directory, args.skip)
-        if os.path.basename(args.input_path).split('.')[-1] == 'mp4':
+        if os.path.basename(args.input_path).split('.')[-1] in ['mp4', 'MP4']:
             extract_video(args.input_path, images_directory, args.skip)
 
     images_list_path = sorted(glob(images_directory + '/*' + args.extension))
