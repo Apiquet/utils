@@ -235,7 +235,7 @@ def main():
 
     # get gif name
     output_gif_name = args.gif_name
-    if args.gif_name.split('.')[-1] != 'gif':
+    if args.gif_name.split('.')[-1] not in ['gif', 'GIF']:
         output_gif_name += '.gif'
 
     # get gif path
@@ -244,7 +244,7 @@ def main():
         output_gif_path = input_directory + '/' + output_gif_name
     elif args.output_path == "":
         output_gif_path = input_directory + '/../' + output_gif_name
-    elif args.output_path.split('.')[-1] == 'gif':
+    elif args.output_path.split('.')[-1] in ['gif', 'GIF', 'mp4', 'MP4']:
         output_gif_path = args.output_path
 
     if args.mp4:
