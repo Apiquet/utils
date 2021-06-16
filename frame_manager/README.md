@@ -15,6 +15,8 @@
     - Keep extracted images from the .gif/.mp4
     - Frames to keep: if we want to keep 1 frame every N frames from the video
     - gif name (default is result.gif)
+    - path to an image to overlap with all the input images
+    - option to save an mp4 video instead of gif file
 
 
 # Examples:
