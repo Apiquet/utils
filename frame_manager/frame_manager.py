@@ -86,15 +86,15 @@ def extract_video(video_path, output_path, skip):
         - output_path (str): path for output .png images
         - skip        (int): reduce the number of images: keep 1 frame/skip.
     '''
-    vidoe_capture = cv2.VideoCapture(video_path)
-    success, image = vidoe_capture.read()
+    video_capture = cv2.VideoCapture(video_path)
+    success, image = video_capture.read()
     i = 0
     while success:
         sys.stdout.write("\rframe {0}".format(i))
         sys.stdout.flush()
         if i%skip == 0:
             cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)
-        success, image = vidoe_capture.read()
+        success, image = video_capture.read()
         i += 1
 
 
