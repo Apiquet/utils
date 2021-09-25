@@ -8,4 +8,4 @@
 
 - uncompress: a program to uncompress files (tar.gz, tar, zip, etc.)
 
-- video_manager: a program to manager videos with several options
+- video_manager: a program to manage videos with several options
