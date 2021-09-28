@@ -8,4 +8,4 @@
 
 - uncompress: uncompress files (tar.gz, tar, zip, etc.)
 
-- video_manager: manage videos with several options (concatenate multiple videos, change resolution, skip 1/N frame, change fps)
+- video_manager: manage videos with several options (concatenate multiple videos, change resolution, skip 1/N frames, change fps)
