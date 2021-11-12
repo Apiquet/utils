@@ -221,6 +221,14 @@ def main():
         action="store_true",
         help="To create mp4 video instead of gif file."
     )
+    parser.add_argument(
+        "-d",
+        "--padding",
+        required=False,
+        default=None,
+        type=str,
+        help="Padding to add in format: top,bottom,left,right,boderType,r,g,b"
+    )
 
     args = parser.parse_args()
     input_directory = os.path.dirname(args.input_path) + '/'
@@ -245,6 +253,10 @@ def main():
     if args.overlap is not None:
         overlap_image = Image.open(args.overlap)
 
+    if args.padding is not None:
+        top, bottom, left, right, boderType, r, g, b =\
+            [int(el) for el in args.padding.split(',')]
+
     for i, image_path in tqdm(enumerate(images_list_path)):
         img = cv2.imread(image_path)
         img = cv2.resize(img, (int(img.shape[1]*args.resize_fact),
@@ -254,6 +266,9 @@ def main():
             rgb_img = overlap_two_images(rgb_img, overlap_image)
         if args.rotate_angle != 0.0:
             rgb_img = rotate_image(rgb_img, args.rotate_angle)
+        if args.padding is not None:
+            rgb_img = cv2.copyMakeBorder(rgb_img, top, bottom, left, right,
+                                         boderType, value=[r, g, b])
         cv2_images.append(rgb_img)
 
     img_height, img_width, _ = rgb_img.shape
