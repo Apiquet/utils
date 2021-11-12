@@ -38,6 +38,7 @@ Example:
 
 import argparse
 from glob import glob
+import math
 import os
 import sys
 
@@ -52,8 +53,8 @@ def overlap_two_images(img1, img2):
     Function to overlap segmentation map with image
 
     Args:
-        - (cv2 image) first image
-        - (pil image) second image
+        - img1 (cv2 image) first image
+        - img2 (pil image) second image
     Return:
         - (numpy array) overlap between the two input images
     """
@@ -96,6 +97,33 @@ def extract_video(video_path, output_path, skip):
             cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)
         success, image = video_capture.read()
         i += 1
+
+
+def rotate_image(image, angle_deg):
+    '''Extract images from a .mp4 file to the output_path folder (.png images)
+
+    Args:
+        - image  (cv.image): input image to rotate
+        - angle_deg (float): angle in degrees
+    Return:
+        - (cv.image): rotated image
+    '''
+    h, w = image.shape[:2]
+    img_c = (w / 2, h / 2)
+
+    rot = cv2.getRotationMatrix2D(img_c, angle_deg, 1)
+
+    rad = math.radians(angle_deg)
+    sin = math.sin(rad)
+    cos = math.cos(rad)
+    b_w = int((h * abs(sin)) + (w * abs(cos)))
+    b_h = int((h * abs(cos)) + (w * abs(sin)))
+
+    rot[0, 2] += ((b_w / 2) - img_c[0])
+    rot[1, 2] += ((b_h / 2) - img_c[1])
+
+    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_LINEAR)
+    return outImg
 
 
 def main():
@@ -143,9 +171,17 @@ def main():
         "-r",
         "--resize_fact",
         required=False,
-        default=1,
+        default=1.,
         type=float,
         help="Multiply image resolution by given number (default is 1)."
+    )
+    parser.add_argument(
+        "-t",
+        "--rotate_angle",
+        required=False,
+        default=0.,
+        type=float,
+        help="Angle in degrees to rotate image (default is 0)."
     )
     parser.add_argument(
         "-k",
@@ -216,9 +252,11 @@ def main():
         rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if args.overlap is not None and i<38:
             rgb_img = overlap_two_images(rgb_img, overlap_image)
+        if args.rotate_angle != 0.0:
+            rgb_img = rotate_image(rgb_img, args.rotate_angle)
         cv2_images.append(rgb_img)
 
-    img_height, img_width, _ = img.shape
+    img_height, img_width, _ = rgb_img.shape
 
     # add image at the end of the cv2_images list
     if args.add_image is not None:
