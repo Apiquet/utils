@@ -1,6 +1,6 @@
 # Some useful programs
 
-- frame_manager: create a .gif/.mp4 files from a folder of images or from a .gif/.mp4 file (with several options to change resolution, fps, size, extract all images from a .gif/.mp4 file, etc.)
+- frame_manager: create a .gif/.mp4 files from a folder of images or from a .gif/.mp4 file (with several options: change resolution, fps, size, extract all images from a .gif/.mp4 file, add padding, rotate, etc.)
 
 - folder_to_binary: convert a folder with all its content to a single binary file with specified delimiter. It can also extract the binary file to restore the folder
  
