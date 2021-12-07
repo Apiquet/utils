@@ -17,7 +17,7 @@
     - gif name (default is result.gif)
     - path to an image to overlap with all the input images
     - option to save an mp4 video instead of gif file
-    - add padding with left,right,top,bottom options
+    - size of padding on left,right,top,bottom
     - rotate images
 
 
