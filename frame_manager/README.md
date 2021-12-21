@@ -2,7 +2,15 @@
     - Extract frames from .gif/.mp4 input file
     - load frames if directory as input
     - Create a gif from the input
-    - Options available: set fps, set specific image extension, resize images, customize gif name, skip frames to reduce gif size, keep or not the extracted images from the input file, add padding, rotate images.
+    - Options available:
+        - set fps,
+        - set specific image extension,
+        - resize images,
+        - customize gif name,
+        - skip frames to reduce gif size,
+        - keep or not the extracted images from the input file,
+        - add padding,
+        - rotate images.
 
 # Args:
     - Path to the images or a video
