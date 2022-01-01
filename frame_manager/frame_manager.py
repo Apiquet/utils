@@ -4,20 +4,8 @@
 """
 Frame manager
 
-Extract frames from .gif/.mp4 input file (or load frames if directory as input)
+Extract frames from .gif/videos input file (or load frames if directory as input)
 Create a gif from the frames with options
-
-Args:
-    - Path to the images or a video
-    (OPTIONAL)
-    - Output path
-    - Extension if only images with specific extension is wanted
-    - Add an image to the end of the gif (n times)
-    - FPS (default is 30)
-    - Resize factor for the images to build the gif
-    - Keep extracted images from the .gif/.mp4
-    - Frames to keep: if we want to keep 1 frame every N frames from the video
-    - gif name (default is result.gif)
 
 Example:
 
@@ -71,12 +59,15 @@ def extract_gif(gif_path, output_path, skip):
         - gif_path    (str): input gif to extract
         - output_path (str): path for output .png images
         - skip        (int): reduce the number of images: keep 1 frame/skip.
+    Return:
+        - (int) number of frames extracted
     '''
     gif_object = Image.open(gif_path)
     for i, frame in tqdm(enumerate(range(gif_object.n_frames))):
         gif_object.seek(frame)
         if i%skip == 0:
             gif_object.save(output_path + "frame_{0:08d}.png".format(i))
+    return gif_object.n_frames
 
 
 def extract_video(video_path, output_path, skip):
@@ -86,6 +77,8 @@ def extract_video(video_path, output_path, skip):
         - gif_path    (str): input video to extract
         - output_path (str): path for output .png images
         - skip        (int): reduce the number of images: keep 1 frame/skip.
+    Return:
+        - (int) number of frames extracted
     '''
     video_capture = cv2.VideoCapture(video_path)
     success, image = video_capture.read()
@@ -97,6 +90,7 @@ def extract_video(video_path, output_path, skip):
             cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)
         success, image = video_capture.read()
         i += 1
+    return i
 
 
 def rotate_image(image, angle_deg):
@@ -237,16 +231,26 @@ def main():
 
     # if input if gif or mp4: extract all images
     if os.path.isfile(args.input_path):
-        print("Extract images...")
         images_directory += 'tmp_images/'
         os.makedirs(images_directory, exist_ok=True)
 
         if os.path.basename(args.input_path).split('.')[-1] in ['gif', 'GIF']:
-            extract_gif(args.input_path, images_directory, args.skip)
-        if os.path.basename(args.input_path).split('.')[-1] in ['mp4', 'MP4']:
-            extract_video(args.input_path, images_directory, args.skip)
+            print("Extract gif image...")
+            number_of_frames = extract_gif(args.input_path, images_directory, args.skip)
+        else:
+            print("Extract video file...")
+            number_of_frames = extract_video(args.input_path, images_directory, args.skip)
+
+        if number_of_frames == 0:
+            raise Exception("Extraction error.")
+    elif not os.path.isdir(args.input_path):
+        raise Exception(args.input_path + " does not exist.")
+
 
     images_list_path = sorted(glob(images_directory + '/*' + args.extension))
+    if len(images_list_path) == 0:
+        raise Exception('Not file found with pattern: ' + images_directory + '/*' + args.extension)
+
     cv2_images = []
 
     print("\nRead images...")
