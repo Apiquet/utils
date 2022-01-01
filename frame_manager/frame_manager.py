@@ -53,44 +53,56 @@ def overlap_two_images(img1, img2):
     return np.array(overlap)
 
 
-def extract_gif(gif_path, output_path, skip):
+def extract_gif(result_path, output_path, skip, start_idx, end_idx):
     """Extract images from a .gif file to the output_path folder (.png images)
 
     Args:
-        - gif_path    (str): input gif to extract
+        - result_path    (str): input gif to extract
         - output_path (str): path for output .png images
-        - skip        (int): reduce the number of images: keep 1 frame/skip.
+        - skip        (int): reduce the number of images: keep 1 frame/skip
+        - start_idx (int): start index to save images
+        - end_idx (int): end index to save images
     Return:
         - (int) number of frames extracted
     """
-    gif_object = Image.open(gif_path)
+    gif_object = Image.open(result_path)
     for i, frame in tqdm(enumerate(range(gif_object.n_frames))):
+        if i < start_idx:
+            continue
+        elif i > end_idx:
+            break
         gif_object.seek(frame)
         if i % skip == 0:
             gif_object.save(output_path + "frame_{0:08d}.png".format(i))
     return gif_object.n_frames
 
 
-def extract_video(video_path, output_path, skip):
+def extract_video(video_path, output_path, skip, start_idx, end_idx):
     """Extract images from a .mp4 file to the output_path folder (.png images)
 
     Args:
-        - gif_path    (str): input video to extract
+        - result_path    (str): input video to extract
         - output_path (str): path for output .png images
         - skip        (int): reduce the number of images: keep 1 frame/skip.
+        - start_idx (int): start index to save images
+        - end_idx (int): end index to save images
     Return:
         - (int) number of frames extracted
     """
     video_capture = cv2.VideoCapture(video_path)
     success, image = video_capture.read()
-    i = 0
+    i = -1
     while success:
+        i += 1
+        if i < start_idx:
+            continue
+        elif i > end_idx:
+            break
         sys.stdout.write("\rframe {0}".format(i))
         sys.stdout.flush()
         if i % skip == 0:
             cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)
         success, image = video_capture.read()
-        i += 1
     return i
 
 
@@ -131,7 +143,12 @@ def main():
         help="Path to a folder of images (with '\\') or a .gif/.mp4 file.",
     )
     parser.add_argument(
-        "-o", "--output_path", required=False, default="", type=str, help="Path to the output gif."
+        "-o",
+        "--output_path",
+        required=False,
+        default=None,
+        type=str,
+        help="Path to the output file.",
     )
     parser.add_argument(
         "-e",
@@ -155,7 +172,7 @@ def main():
         required=False,
         default=30,
         type=int,
-        help="fps of the output gif, default is 30.",
+        help="fps of the output result, default is 30.",
     )
     parser.add_argument(
         "-r",
@@ -189,7 +206,7 @@ def main():
         help="To reduce the gif size, the script will keep 1 frame / skip.",
     )
     parser.add_argument(
-        "-n", "--gif_name", required=False, default="result.gif", type=str, help="Output gif name."
+        "-n", "--result_name", required=False, default="result", type=str, help="Output name."
     )
     parser.add_argument(
         "-v",
@@ -207,30 +224,53 @@ def main():
         help="To create mp4 video instead of gif file.",
     )
     parser.add_argument(
-        "-d",
+        "-g",
         "--padding",
         required=False,
         default=None,
         type=str,
         help="Padding to add in format: top,bottom,left,right,boderType,r,g,b",
     )
+    parser.add_argument(
+        "-s",
+        "--start_idx",
+        required=False,
+        default=0,
+        type=int,
+        help="Start frame index.",
+    )
+    parser.add_argument(
+        "-d",
+        "--end_idx",
+        required=False,
+        default=-1,
+        type=int,
+        help="End frame index.",
+    )
 
     args = parser.parse_args()
-    input_directory = os.path.dirname(args.input_path) + '/'
+    input_directory = os.path.abspath(os.path.dirname(args.input_path)) + '/'
 
     images_directory = input_directory
 
-    # if input if gif or mp4: extract all images
+    index_used_for_extraction = False
+
+    # if input if gif or video: extract all images
     if os.path.isfile(args.input_path):
+        index_used_for_extraction = True
         images_directory += 'tmp_images/'
         os.makedirs(images_directory, exist_ok=True)
 
         if os.path.basename(args.input_path).split('.')[-1] in ['gif', 'GIF']:
             print("Extract gif image...")
-            number_of_frames = extract_gif(args.input_path, images_directory, args.skip)
+            number_of_frames = extract_gif(
+                args.input_path, images_directory, args.skip, args.start_idx, args.end_idx
+            )
         else:
             print("Extract video file...")
-            number_of_frames = extract_video(args.input_path, images_directory, args.skip)
+            number_of_frames = extract_video(
+                args.input_path, images_directory, args.skip, args.start_idx, args.end_idx
+            )
 
         if number_of_frames == 0:
             raise Exception("Extraction error.")
@@ -238,6 +278,8 @@ def main():
         raise Exception(args.input_path + " does not exist.")
 
     images_list_path = sorted(glob(images_directory + '/*' + args.extension))
+    if not index_used_for_extraction:
+        images_list_path = images_list_path[args.start_idx : args.end_idx]
     if len(images_list_path) == 0:
         raise Exception('Not file found with pattern: ' + images_directory + '/*' + args.extension)
 
@@ -280,33 +322,27 @@ def main():
 
     print("Create animation...")
 
-    # get gif name
-    output_gif_name = args.gif_name
-    if args.gif_name.split('.')[-1] not in ['gif', 'GIF']:
-        output_gif_name += '.gif'
-
-    # get gif path
-    output_gif_path = args.output_path + '/' + output_gif_name
-    if args.output_path == "" and os.path.isfile(args.input_path):
-        output_gif_path = input_directory + '/' + output_gif_name
-    elif args.output_path == "":
-        output_gif_path = input_directory + '/../' + output_gif_name
-    elif args.output_path.split('.')[-1] in ['gif', 'GIF', 'mp4', 'MP4']:
-        output_gif_path = args.output_path
+    # get result path
+    output_result_path = args.output_path + '/' + args.result_name
+    if args.output_path is None:
+        output_result_path = input_directory + '/' + args.result_name
 
     if args.mp4:
-        output_gif_path = output_gif_path.replace('gif', 'mp4')
+        if args.result_name.split('.')[-1] != 'mp4':
+            output_result_path += '.mp4'
         video = cv2.VideoWriter(
-            output_gif_path, cv2.VideoWriter_fourcc(*'mp4v'), args.fps, (img_width, img_height)
+            output_result_path, cv2.VideoWriter_fourcc(*'mp4v'), args.fps, (img_width, img_height)
         )
 
         for image in tqdm(cv2_images):
             video.write(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         video.release()
     else:
+        if args.result_name.split('.')[-1] not in ['gif', 'GIF']:
+            output_result_path += '.gif'
         # create gif
-        os.makedirs(os.path.dirname(output_gif_path), exist_ok=True)
-        with imageio.get_writer(output_gif_path, mode="I", fps=args.fps) as writer:
+        os.makedirs(os.path.dirname(output_result_path), exist_ok=True)
+        with imageio.get_writer(output_result_path, mode="I", fps=args.fps) as writer:
             for frame in tqdm(cv2_images):
                 writer.append_data(frame)
         writer.close()
