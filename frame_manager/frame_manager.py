@@ -24,46 +24,45 @@ Example:
     will not remove the tmp_images/ folder
 """
 
-import argparse
-import math
-import os
-import sys
+from argparse import ArgumentParser
 from glob import glob
+from math import cos, radians, sin
+from os import makedirs, path, remove, rmdir
+from sys import stdout
 
 import cv2
-import imageio
-import numpy as np
+from imageio import get_writer
+from numpy import array, ndarray
 from PIL import Image
 from tqdm import tqdm
 
 
-def overlap_two_images(img1, img2):
+def overlap_two_images(img1: Image, img2: Image) -> array:
     """
     Function to overlap segmentation map with image
 
     Args:
-        - img1 (cv2 image) first image
-        - img2 (pil image) second image
+        - img1: first image
+        - img2: second image
     Return:
-        - (numpy array) overlap between the two input images
+        - overlap between the two input images
     """
-    overlap = Image.fromarray(img1)
-    overlap.paste(img2, (0, 0), img2.convert('RGBA'))
+    img1.paste(img2, (0, 0), img2.convert('RGBA'))
 
-    return np.array(overlap)
+    return array(img1)
 
 
-def extract_gif(result_path, output_path, skip, start_idx, end_idx):
+def extract_gif(result_path: str, output_path: str, skip: int, start_idx: int, end_idx: int) -> int:
     """Extract images from a .gif file to the output_path folder (.png images)
 
     Args:
-        - result_path    (str): input gif to extract
-        - output_path (str): path for output .png images
-        - skip        (int): reduce the number of images: keep 1 frame/skip
-        - start_idx (int): start index to save images
-        - end_idx (int): end index to save images
+        - result_path: input gif to extract
+        - output_path: path for output .png images
+        - skip: reduce the number of images: keep 1 frame/skip
+        - start_idx: start index to save images
+        - end_idx: end index to save images
     Return:
-        - (int) number of frames extracted
+        - number of frames extracted
     """
     gif_object = Image.open(result_path)
     for i, frame in tqdm(enumerate(range(gif_object.n_frames))):
@@ -77,17 +76,19 @@ def extract_gif(result_path, output_path, skip, start_idx, end_idx):
     return gif_object.n_frames
 
 
-def extract_video(video_path, output_path, skip, start_idx, end_idx):
+def extract_video(
+    video_path: str, output_path: str, skip: int, start_idx: int, end_idx: int
+) -> int:
     """Extract images from a .mp4 file to the output_path folder (.png images)
 
     Args:
-        - result_path    (str): input video to extract
-        - output_path (str): path for output .png images
-        - skip        (int): reduce the number of images: keep 1 frame/skip.
-        - start_idx (int): start index to save images
-        - end_idx (int): end index to save images
+        - result_path: input video to extract
+        - output_path: path for output .png images
+        - skip: reduce the number of images: keep 1 frame/skip.
+        - start_idx: start index to save images
+        - end_idx: end index to save images
     Return:
-        - (int) number of frames extracted
+        - number of frames extracted
     """
     video_capture = cv2.VideoCapture(video_path)
     success, image = video_capture.read()
@@ -98,33 +99,33 @@ def extract_video(video_path, output_path, skip, start_idx, end_idx):
             continue
         elif i > end_idx:
             break
-        sys.stdout.write("\rframe {0}".format(i))
-        sys.stdout.flush()
+        stdout.write("\rframe {0}".format(i))
+        stdout.flush()
         if i % skip == 0:
             cv2.imwrite(output_path + "frame_{0:08d}.png".format(i), image)
         success, image = video_capture.read()
     return i
 
 
-def rotate_image(image, angle_deg):
+def rotate_image(image: ndarray, angle_deg: float) -> ndarray:
     """Extract images from a .mp4 file to the output_path folder (.png images)
 
     Args:
-        - image  (cv.image): input image to rotate
-        - angle_deg (float): angle in degrees
+        - image: input image to rotate
+        - angle_deg: angle in degrees
     Return:
-        - (cv.image): rotated image
+        - rotated image
     """
     h, w = image.shape[:2]
     img_c = (w / 2, h / 2)
 
     rot = cv2.getRotationMatrix2D(img_c, angle_deg, 1)
 
-    rad = math.radians(angle_deg)
-    sin = math.sin(rad)
-    cos = math.cos(rad)
-    b_w = int((h * abs(sin)) + (w * abs(cos)))
-    b_h = int((h * abs(cos)) + (w * abs(sin)))
+    rad = radians(angle_deg)
+    sinus = sin(rad)
+    cosinus = cos(rad)
+    b_w = int((h * abs(sinus)) + (w * abs(cosinus)))
+    b_h = int((h * abs(cosinus)) + (w * abs(sinus)))
 
     rot[0, 2] += (b_w / 2) - img_c[0]
     rot[1, 2] += (b_h / 2) - img_c[1]
@@ -134,7 +135,7 @@ def rotate_image(image, angle_deg):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument(
         "-i",
         "--input_path",
@@ -249,19 +250,19 @@ def main():
     )
 
     args = parser.parse_args()
-    input_directory = os.path.abspath(os.path.dirname(args.input_path)) + '/'
+    input_directory = path.abspath(path.dirname(args.input_path)) + '/'
 
     images_directory = input_directory
 
     index_used_for_extraction = False
 
     # if input if gif or video: extract all images
-    if os.path.isfile(args.input_path):
+    if path.isfile(args.input_path):
         index_used_for_extraction = True
         images_directory += 'tmp_images/'
-        os.makedirs(images_directory, exist_ok=True)
+        makedirs(images_directory, exist_ok=True)
 
-        if os.path.basename(args.input_path).split('.')[-1] in ['gif', 'GIF']:
+        if path.basename(args.input_path).split('.')[-1] in ['gif', 'GIF']:
             print("Extract gif image...")
             number_of_frames = extract_gif(
                 args.input_path, images_directory, args.skip, args.start_idx, args.end_idx
@@ -274,7 +275,7 @@ def main():
 
         if number_of_frames == 0:
             raise Exception("Extraction error.")
-    elif not os.path.isdir(args.input_path):
+    elif not path.isdir(args.input_path):
         raise Exception(args.input_path + " does not exist.")
 
     images_list_path = sorted(glob(images_directory + '/*' + args.extension))
@@ -299,7 +300,7 @@ def main():
         )
         rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if args.overlap is not None and i < 38:
-            rgb_img = overlap_two_images(rgb_img, overlap_image)
+            rgb_img = overlap_two_images(Image.fromarray(rgb_img), overlap_image)
         if args.rotate_angle != 0.0:
             rgb_img = rotate_image(rgb_img, args.rotate_angle)
         if args.padding is not None:
@@ -341,15 +342,15 @@ def main():
         if args.result_name.split('.')[-1] not in ['gif', 'GIF']:
             output_result_path += '.gif'
         # create gif
-        os.makedirs(os.path.dirname(output_result_path), exist_ok=True)
-        with imageio.get_writer(output_result_path, mode="I", fps=args.fps) as writer:
+        makedirs(path.dirname(output_result_path), exist_ok=True)
+        with get_writer(output_result_path, mode="I", fps=args.fps) as writer:
             for frame in tqdm(cv2_images):
                 writer.append_data(frame)
         writer.close()
 
-    if not args.keep_extracted_imgs and os.path.isfile(args.input_path):
-        [os.remove(img) for img in glob(images_directory + '/*')]
-        os.rmdir(images_directory)
+    if not args.keep_extracted_imgs and path.isfile(args.input_path):
+        [remove(img) for img in glob(images_directory + '/*')]
+        rmdir(images_directory)
 
 
 if __name__ == '__main__':
