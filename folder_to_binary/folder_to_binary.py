@@ -25,7 +25,9 @@ Example:
 import argparse
 import os
 from pathlib import Path
+
 from tqdm import tqdm
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -35,7 +37,7 @@ def main():
         required=True,
         type=str,
         help="Path to a folder to binarize with '//'\
-            or a binary file to extract."
+            or a binary file to extract.",
     )
     parser.add_argument(
         "-o",
@@ -45,15 +47,10 @@ def main():
         type=str,
         help="Name of the output binary or folder, default:\
             If binarize mode: take the input folder name,\
-            If extract mode: take the binary name"
+            If extract mode: take the binary name",
     )
     parser.add_argument(
-        "-d",
-        "--delimiter",
-        required=False,
-        default="delimiter",
-        type=str,
-        help="Delimiter to use"
+        "-d", "--delimiter", required=False, default="delimiter", type=str, help="Delimiter to use"
     )
 
     args = parser.parse_args()
@@ -84,23 +81,20 @@ def main():
     # if input is .bin file: extract all files from it
     else:
         if args.output_name is None:
-            bin_name = os.path.basename(
-                args.input_path).split('.')[0] + '_extracted'
+            bin_name = os.path.basename(args.input_path).split('.')[0] + '_extracted'
         else:
             bin_name = args.output_name
         output_path = os.path.dirname(args.input_path) + '/' + bin_name + '/'
         os.makedirs(output_path)
 
         with open(args.input_path, "rb") as f:
-            elements = list(filter(None, f.read().split(
-                args.delimiter.encode())))
+            elements = list(filter(None, f.read().split(args.delimiter.encode())))
 
         for i, el in tqdm(enumerate(elements)):
-            if i%2 == 0:
+            if i % 2 == 0:
                 element_name = el.decode()
             else:
-                os.makedirs(os.path.dirname(output_path + element_name),
-                            exist_ok=True)
+                os.makedirs(os.path.dirname(output_path + element_name), exist_ok=True)
                 with open(output_path + element_name, "wb") as f:
                     f.write(el)
 
