@@ -324,9 +324,10 @@ def main():
     print("Create animation...")
 
     # get result path
-    output_result_path = args.output_path + '/' + args.result_name
+    output_result_path = args.output_path
     if args.output_path is None:
-        output_result_path = input_directory + '/' + args.result_name
+        output_result_path = input_directory
+    output_result_path = output_result_path + '/' + args.result_name
 
     if args.mp4:
         if args.result_name.split('.')[-1] != 'mp4':
