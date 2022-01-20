@@ -17,30 +17,22 @@ import shutil
 
 
 def extract(compressedfile, extract_path):
-    '''Extract files
+    """Extract files
 
     Args:
         - compressedfile    (str) : path to the compressed file
         - extract_path      (str) : path for the extracted files
-    '''
+    """
     shutil.unpack_archive(compressedfile, extract_path)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i",
-        "--compressedfile",
-        required=True,
-        type=str,
-        help="Path to the file to uncompress."
+        "-i", "--compressedfile", required=True, type=str, help="Path to the file to uncompress."
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        required=True,
-        type=str,
-        help="Output path for the extracted files."
+        "-o", "--output", required=True, type=str, help="Output path for the extracted files."
     )
 
     args = parser.parse_args()
