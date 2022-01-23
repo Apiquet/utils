@@ -6,6 +6,6 @@
  
 - pdf_manager: manage pdf files (compression, remove or keep pages, change pages order, merge several pdf files and overlay a pdf file with another)
 
-- uncompress: uncompress files (tar.gz, tar, zip, etc.)
+- unzip: unzip files (tar.gz, tar, zip, etc.)
 
 - video_manager: manage videos with several options (concatenate multiple videos, change resolution, skip 1/N frames, change fps)

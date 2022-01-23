@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Uncompress program for tar, tar.gz, zip, etc
+Unzip program for tar, tar.gz, zip, etc
 
 Args:
     - Path to the compressed file to extract
     - Path to the output folder for extracted files
 
 Example:
-    python3 uncompress.py -i path/to/file.tar.gz -o path/for/extractedfiles
+    python3 unzip.py -i path/to/file.tar.gz -o path/for/extractedfiles
 """
 
 import argparse
@@ -29,7 +29,7 @@ def extract(compressedfile, extract_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--compressedfile", required=True, type=str, help="Path to the file to uncompress."
+        "-i", "--compressedfile", required=True, type=str, help="Path to the file to unzip."
     )
     parser.add_argument(
         "-o", "--output", required=True, type=str, help="Output path for the extracted files."
