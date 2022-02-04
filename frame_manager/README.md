@@ -9,7 +9,7 @@
         - customize gif name,
         - skip frames to reduce gif size,
         - keep or not the extracted images from the input file,
-        - add padding on any side with specified RGB color and size
+        - add padding on any side with specified RGB color, type and size
         - rotate images.
 
 # Args:
