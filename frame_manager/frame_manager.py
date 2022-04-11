@@ -28,7 +28,7 @@ from argparse import ArgumentParser
 from glob import glob
 from math import cos, radians, sin
 from os import makedirs, path, remove, rmdir
-from sys import stdout, float_info
+from sys import stdout, maxsize
 
 import cv2
 from imageio import get_writer
@@ -244,7 +244,7 @@ def main():
         "-d",
         "--end_idx",
         required=False,
-        default=float_info.max,
+        default=maxsize,
         type=int,
         help="End frame index.",
     )
