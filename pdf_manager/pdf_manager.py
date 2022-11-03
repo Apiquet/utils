@@ -44,6 +44,8 @@ Example:
 
 import argparse
 import os
+from glob import glob
+from os.path import isdir
 
 from PyPDF2 import PdfFileMerger, PdfFileReader, PdfFileWriter
 
@@ -179,7 +181,10 @@ def merge_pdf_files(pdf_file, output_path):
         - pdf_file        (str): path to the pdf files separated by a comma
         - output_path     (str): path to the output pdf file
     """
-    pdf_files = pdf_file.split(',')
+    if isdir(pdf_file):
+        pdf_files = sorted(glob(pdf_file + '/*.pdf'))
+    else:
+        pdf_files = pdf_file.split(',')
     merger = PdfFileMerger()
 
     for pdf_file_path in pdf_files:
